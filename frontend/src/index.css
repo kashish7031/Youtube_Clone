@@ -1,12 +1,10 @@
 ﻿:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: Roboto, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  background-color: #f9f9f9;
+  color: #0f0f0f;
 }
 
 body {
@@ -14,8 +12,6 @@ body {
   padding: 0;
   min-width: 320px;
   min-height: 100vh;
-  background-color: #f9f9f9; /* Light YouTube-like background */
-  color: #0f0f0f;
 }
 
 a {
@@ -23,17 +19,39 @@ a {
   color: inherit;
 }
 
+/* GLOBAL BUTTON STYLES */
 button {
   font-family: inherit;
+  transition: opacity 0.2s;
 }
 
-/* Ensure images and videos are responsive */
+button:hover {
+  opacity: 0.8;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* GLOBAL INPUT STYLES */
+input, textarea, select {
+  font-family: inherit;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: 2px solid #065fd4; /* YouTube Blue */
+  border-color: transparent;
+}
+
+/* IMAGE RESET */
 img, video {
   max-width: 100%;
   display: block;
 }
 
-/* Scrollbar styling */
+/* SCROLLBAR */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -41,9 +59,9 @@ img, video {
   background: #f1f1f1; 
 }
 ::-webkit-scrollbar-thumb {
-  background: #888; 
+  background: #909090; 
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #555; 
+  background: #606060; 
 }
