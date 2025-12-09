@@ -1,0 +1,4 @@
+﻿/* frontend/src/index.css - minimal styling */
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; background: #fff; color: #111; }
+a { color: inherit; text-decoration: none; }
