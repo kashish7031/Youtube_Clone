@@ -1,46 +1,67 @@
-// backend/src/routes/authRoutes.js
-import express from "express";
-import User from "../models/User.js";
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js'; 
 
 const router = express.Router();
 
-// register
-router.post("/register", async (req, res) => {
+// --- REGISTER ---
+router.post('/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
-    if (!username || !email || !password) return res.status(400).json({ message: "Missing fields" });
+    
+    // Check existing
+    const existingUser = await User.findOne({ email });
+    if (existingUser) return res.status(400).json({ message: "User already exists" });
 
-    const existing = await User.findOne({ $or: [{ username }, { email }] });
-    if (existing) return res.status(400).json({ message: "User exists" });
+    // HASHING HAPPENS HERE (AND ONLY HERE)
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({ username, email, password });
-    return res.status(201).json({ message: "User created", userId: user._id });
+    const newUser = new User({ 
+      username, 
+      email, 
+      password: hashedPassword 
+    });
+    
+    await newUser.save();
+    console.log("✅ User Registered:", email); // Server Log
+
+    res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
-    console.error("auth/register error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message || err });
+    console.error("❌ Register Error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-// login (simple demo)
-router.post("/login", async (req, res) => {
+// --- LOGIN ---
+router.post('/login', async (req, res) => {
   try {
-    const { usernameOrEmail, password } = req.body;
-    if (!usernameOrEmail || !password) return res.status(400).json({ message: "Missing fields" });
+    const { email, password } = req.body;
 
-    const user = await User.findOne({
-      $or: [{ username: usernameOrEmail }, { email: usernameOrEmail }]
-    });
+    // 1. Find User
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found. Please Register." });
+    }
 
-    if (!user) return res.status(401).json({ message: "Invalid credentials" });
+    // 2. Compare Password
+    // We compare the plain text 'password' with the 'user.password' hash from DB
+    const isMatch = await bcrypt.compare(password, user.password);
+    
+    if (!isMatch) {
+      console.log("❌ Password Mismatch for:", email);
+      return res.status(400).json({ message: "Wrong Password" });
+    }
 
-    const ok = await user.comparePassword(password);
-    if (!ok) return res.status(401).json({ message: "Invalid credentials" });
+    // 3. Success
+    const token = jwt.sign({ id: user._id }, "secret_key_123", { expiresIn: "1h" });
+    const { password: _, ...userData } = user._doc;
+    
+    console.log("✅ Login Success:", email);
+    res.json({ token, user: userData });
 
-    // Return limited info — in a real app return a JWT.
-    return res.json({ message: "Login success", userId: user._id });
   } catch (err) {
-    console.error("auth/login error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message || err });
+    res.status(500).json({ error: err.message });
   }
 });
 

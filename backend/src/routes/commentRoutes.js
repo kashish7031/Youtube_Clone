@@ -1,28 +1,29 @@
-﻿// backend/src/routes/commentRoutes.js
-import express from "express";
+﻿import express from "express";
 import Comment from "../models/Comment.js";
+import User from "../models/User.js"; // Ensure .js is present
 
 const router = express.Router();
 
-router.get("/:videoId", async (req, res) => {
+// ADD COMMENT
+router.post("/", async (req, res) => {
   try {
-    const comments = await Comment.find({ video: req.params.videoId }).populate("user", "username");
-    res.json({ ok: true, comments });
+    const newComment = new Comment({ ...req.body });
+    const savedComment = await newComment.save();
+    res.status(200).json(savedComment);
   } catch (err) {
-    console.error("GET /api/comments error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json(err);
   }
 });
 
-router.post("/", async (req, res) => {
+// GET COMMENTS FOR A VIDEO
+router.get("/:videoId", async (req, res) => {
   try {
-    const { text, user, video } = req.body;
-    if (!text || !user || !video) return res.status(400).json({ message: "Missing fields" });
-    const comment = await Comment.create({ text, user, video });
-    res.json({ ok: true, comment });
+    // Populate shows user details instead of just ID
+    const comments = await Comment.find({ videoId: req.params.videoId })
+      .populate("userId", "username avatar"); 
+    res.status(200).json(comments);
   } catch (err) {
-    console.error("POST /api/comments error:", err);
-    res.status(500).json({ message: "Server error", error: err.message });
+    res.status(500).json(err);
   }
 });
 

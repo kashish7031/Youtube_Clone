@@ -1,36 +1,34 @@
-﻿// frontend/src/App.jsx
-import React from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import Home from "./pages/Home.jsx";
+﻿import { useState } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
+import Home from './pages/Home';
+import VideoPage from './pages/VideoPage';
+import Login from './pages/Login';
+import Register from './pages/Register'; // Import Register
+import './App.css';
 
-export default function App() {
+function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
   return (
     <BrowserRouter>
-      <div style={layout.header}>
-        <div style={layout.brand}>YT-Clone</div>
-        <nav style={layout.nav}>
-          <Link to="/" style={layout.link}>Home</Link>
-        </nav>
+      <Navbar toggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
+      
+      <div className="app-layout">
+        <Sidebar isOpen={sidebarOpen} />
+        
+        <div className={`main-content ${sidebarOpen ? 'full-width' : ''}`}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/video/:id" element={<VideoPage />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Routes>
+        </div>
       </div>
-
-      <Routes>
-        <Route path="/" element={<Home />} />
-        {/* Add other routes here (Login, Register, Video page) */}
-      </Routes>
     </BrowserRouter>
   );
 }
 
-const layout = {
-  header: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 24px",
-    borderBottom: "1px solid #eee",
-    marginBottom: 12,
-  },
-  brand: { fontWeight: 700 },
-  nav: {},
-  link: { marginLeft: 12, textDecoration: "none", color: "#333" },
-};
+export default App;

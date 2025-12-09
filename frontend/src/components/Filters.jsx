@@ -1,23 +1,22 @@
-﻿export default function Filters({ onSelect }) {
-  const categories = ["All", "React", "Node", "Music", "Gaming", "News", "Movies"];
+﻿import React from "react";
+import "../App.css";
+
+const categories = ["All", "Music", "Gaming", "Sports", "Education", "Technology", "Movies"];
+
+const Filters = ({ selectedCategory, setSelectedCategory }) => {
   return (
-    <div style={{ marginBottom: 20 }}>
-      {categories.map((cat) => (
+    <div className="filter-container">
+      {categories.map((category) => (
         <button
-          key={cat}
-          onClick={() => onSelect(cat === "All" ? "" : cat)}
-          style={{
-            marginRight: 10,
-            padding: "8px 12px",
-            borderRadius: 20,
-            border: "1px solid #ddd",
-            background: "white",
-            cursor: "pointer"
-          }}
+          key={category}
+          className={`filter-btn ${selectedCategory === category ? "active" : ""}`}
+          onClick={() => setSelectedCategory(category)}
         >
-          {cat}
+          {category}
         </button>
       ))}
     </div>
   );
-}
+};
+
+export default Filters;

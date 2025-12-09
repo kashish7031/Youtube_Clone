@@ -1,50 +1,66 @@
-// frontend/src/pages/Register.jsx
-import React, { useState } from "react";
-import api from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import '../App.css'; 
 
-export default function Register() {
+const Register = () => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const [form, setForm] = useState({ username: "", email: "", password: "" });
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState(null);
 
-  async function submit(e) {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    setErr(null);
-    setLoading(true);
     try {
-      const res = await api.post("/auth/register", form);
-      // success — go to login
-      setLoading(false);
-      navigate("/login");
-    } catch (error) {
-      setLoading(false);
-      setErr(error.response?.data?.message || error.message);
+      // Ensure your backend is running on port 5000
+      await axios.post('http://localhost:5000/api/auth/register', {
+        username,
+        email,
+        password
+      });
+      alert("Registration Successful! Please Login.");
+      navigate('/login'); // Redirect to Login page
+    } catch (err) {
+      console.error(err);
+      alert("Registration Failed. Try a different email.");
     }
-  }
+  };
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2>Register</h2>
-      <form onSubmit={submit} style={{ maxWidth: 420 }}>
-        <div>
-          <label>Username</label>
-          <input value={form.username} onChange={(e) => setForm(s => ({ ...s, username: e.target.value }))} required />
-        </div>
-        <div>
-          <label>Email</label>
-          <input value={form.email} onChange={(e) => setForm(s => ({ ...s, email: e.target.value }))} type="email" required />
-        </div>
-        <div>
-          <label>Password</label>
-          <input value={form.password} onChange={(e) => setForm(s => ({ ...s, password: e.target.value }))} type="password" required />
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <button type="submit" disabled={loading}>{loading ? "Registering…" : "Register"}</button>
-        </div>
-        {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
-      </form>
+    <div className="auth-container">
+      <div className="auth-box">
+        <h2>Create Channel</h2>
+        <p>Join the YouTube community</p>
+        <form onSubmit={handleRegister}>
+          <input 
+            type="text" 
+            placeholder="Username" 
+            value={username}
+            onChange={(e) => setUsername(e.target.value)} 
+            required 
+          />
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+          />
+          <button type="submit">Sign Up</button>
+        </form>
+        <p className="switch-auth">
+          Already have an account? <Link to="/login">Sign In</Link>
+        </p>
+      </div>
     </div>
   );
-}
+};
+
+export default Register;

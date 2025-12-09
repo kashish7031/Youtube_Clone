@@ -1,52 +1,66 @@
-// frontend/src/pages/Login.jsx
-import React, { useContext, useState } from "react";
-import api from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate, Link } from 'react-router-dom';
+import '../App.css';
 
-export default function Login() {
+const Login = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
-  const [form, setForm] = useState({ usernameOrEmail: "", password: "" });
-  const [err, setErr] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  async function submit(e) {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    setErr(null);
-    setLoading(true);
     try {
-      const res = await api.post("/auth/login", form);
-      // res.data contains token and userId
-      const { token, userId } = res.data;
-      if (!token) throw new Error("No token from server");
-      // save via context (context also persists to localStorage)
-      login({ token, userId, username: res.data.username, email: res.data.email });
-      setLoading(false);
-      navigate("/");
-    } catch (error) {
-      setLoading(false);
-      setErr(error.response?.data?.message || error.message || "Login failed");
+      // Ensure the URL matches your backend port (usually 5000)
+      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      
+      // Save data
+      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      
+      alert("Login Successful!");
+      
+      // Redirect to Home
+      window.location.href = "/"; 
+    } catch (err) {
+      console.error(err);
+      // SHOW THE REAL ERROR MESSAGE
+      if (err.response && err.response.data && err.response.data.message) {
+        alert(err.response.data.message); // Will say "User email not found" or "Wrong Password"
+      } else {
+        alert("Login failed. Check console for details.");
+      }
     }
-  }
+  };
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2>Login</h2>
-      <form onSubmit={submit} style={{ maxWidth: 420 }}>
-        <div>
-          <label>Username or Email</label>
-          <input value={form.usernameOrEmail} onChange={(e) => setForm(f => ({ ...f, usernameOrEmail: e.target.value }))} required />
-        </div>
-        <div>
-          <label>Password</label>
-          <input value={form.password} onChange={(e) => setForm(f => ({ ...f, password: e.target.value }))} type="password" required />
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <button type="submit" disabled={loading}>{loading ? "Logging in…" : "Login"}</button>
-        </div>
-        {err && <div style={{ color: "crimson", marginTop: 8 }}>{err}</div>}
-      </form>
+    <div className="auth-container">
+      <div className="auth-box">
+        <h2>Sign In</h2>
+        <p>Continue to YouTube</p>
+        <form onSubmit={handleLogin}>
+          <input 
+            type="email" 
+            placeholder="Email" 
+            value={email}
+            onChange={(e) => setEmail(e.target.value)} 
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Password" 
+            value={password}
+            onChange={(e) => setPassword(e.target.value)} 
+            required 
+          />
+          <button type="submit">Sign In</button>
+        </form>
+        <p className="switch-auth">
+          Don't have an account? <Link to="/register">Sign Up</Link>
+        </p>
+      </div>
     </div>
   );
-}
+};
+
+export default Login;
