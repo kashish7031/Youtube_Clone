@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const CommentSchema = new mongoose.Schema({
   userId: {
-    type: String, // In a real app, use mongoose.Schema.Types.ObjectId
+    type: String, 
     required: true,
   },
   videoId: {
