@@ -1,28 +1,71 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import Comment from './Comment';
 
-const Comment = ({ comment }) => {
+const Comments = ({ videoId }) => {
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+
+  // Hardcoded User for now (Matches Channel Page)
+  const currentUser = { _id: "653c29926345678912345678", name: "My Channel" }; 
+
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/comments/${videoId}`);
+        setComments(res.data);
+      } catch (err) { console.log(err); }
+    };
+    fetchComments();
+  }, [videoId]);
+
+  const handleComment = async (e) => {
+    e.preventDefault();
+    if (!newComment) return;
+    try {
+      const res = await axios.post("http://localhost:5000/api/comments", {
+        desc: newComment,
+        videoId,
+        userId: currentUser._id,
+      });
+      setComments([...comments, res.data]); // Update list instantly
+      setNewComment(""); 
+    } catch (err) { console.log(err); }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+        await axios.delete(`http://localhost:5000/api/comments/${id}`);
+        setComments(comments.filter(c => c._id !== id));
+    } catch (err) { console.log(err); }
+  };
+
   return (
-    <div style={{ display: 'flex', gap: '10px', margin: '30px 0' }}>
-      {/* Avatar Placeholder */}
-      <img 
-        src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" 
-        alt="avatar" 
-        style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }}
-      />
-      
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', color: '#0f0f0f' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', fontWeight: 'bold' }}>
-                User {comment.userId.substring(0, 5)}...
-            </span>
-            <span style={{ fontSize: '12px', color: '#555' }}>
-                {new Date(comment.createdAt).toLocaleDateString()}
-            </span>
-        </div>
-        <span style={{ fontSize: '14px' }}>{comment.desc}</span>
+    <div style={{ marginTop: '30px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+        <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" style={{ width: '40px', height: '40px', borderRadius: '50%' }} alt="" />
+        <input 
+            style={{ border: 'none', borderBottom: '1px solid #ccc', width: '100%', padding: '10px', outline: 'none' }} 
+            placeholder="Add a public comment..." 
+            value={newComment} 
+            onChange={(e) => setNewComment(e.target.value)} 
+        />
+        <button onClick={handleComment} style={{ padding: '8px 12px', backgroundColor: '#3ea6ff', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>Comment</button>
       </div>
+
+      {comments.map(comment => (
+        <div key={comment._id} style={{position: 'relative'}}>
+            <Comment comment={comment} />
+            <button 
+                onClick={() => handleDelete(comment._id)}
+                style={{ position: 'absolute', right: 0, top: '10px', color: '#ff0000', border: 'none', background: 'none', cursor: 'pointer', fontSize: '12px' }}
+            >
+                Delete
+            </button>
+        </div>
+      ))}
     </div>
   );
 };
 
-export default Comment;
+export default Comments;
