@@ -1,64 +1,67 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate, Link } from 'react-router-dom';
-import '../App.css'; 
+import React, { useState } from "react";
+import axios from "axios";
+import { Link, useNavigate } from "react-router-dom"; 
 
 const Register = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [username, setUsername] = useState(""); // Variable name matches backend
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      // Ensure your backend is running on port 5000
-      await axios.post('http://localhost:5000/api/auth/register', {
-        username,
+      // Sending 'username' to the backend
+      const res = await axios.post("http://localhost:5000/api/auth/signup", {
+        username, 
         email,
-        password
+        password,
       });
-      alert("Registration Successful! Please Login.");
-      navigate('/login'); // Redirect to Login page
+      
+      alert("Registration Successful! You can now login.");
+      navigate("/login");
     } catch (err) {
       console.error(err);
-      alert("Registration Failed. Try a different email.");
+      // This will show the exact reason if it fails again
+      alert(err.response?.data?.message || err.response?.data || "Registration Failed");
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h2>Create Channel</h2>
-        <p>Join the YouTube community</p>
-        <form onSubmit={handleRegister}>
-          <input 
-            type="text" 
-            placeholder="Username" 
-            value={username}
-            onChange={(e) => setUsername(e.target.value)} 
-            required 
-          />
-          <input 
-            type="email" 
-            placeholder="Email" 
-            value={email}
-            onChange={(e) => setEmail(e.target.value)} 
-            required 
-          />
-          <input 
-            type="password" 
-            placeholder="Password" 
-            value={password}
-            onChange={(e) => setPassword(e.target.value)} 
-            required 
-          />
-          <button type="submit">Sign Up</button>
-        </form>
-        <p className="switch-auth">
-          Already have an account? <Link to="/login">Sign In</Link>
-        </p>
-      </div>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
+      <h1>Create Account</h1>
+      <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: 'white', padding: '40px', border: '1px solid #ccc', borderRadius: '8px' }}>
+        
+        <input 
+          type="text" 
+          placeholder="Username" 
+          onChange={(e) => setUsername(e.target.value)} 
+          required 
+          style={{ padding: '10px', width: '250px' }}
+        />
+        
+        <input 
+          type="email" 
+          placeholder="Email" 
+          onChange={(e) => setEmail(e.target.value)} 
+          required 
+          style={{ padding: '10px', width: '250px' }}
+        />
+        
+        <input 
+          type="password" 
+          placeholder="Password" 
+          onChange={(e) => setPassword(e.target.value)} 
+          required 
+          style={{ padding: '10px', width: '250px' }}
+        />
+        
+        <button type="submit" style={{ padding: '10px', backgroundColor: '#cc0000', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
+          Sign Up
+        </button>
+      </form>
+      
+      <p>Already have an account? <Link to="/login">Sign In</Link></p>
     </div>
   );
 };

@@ -1,67 +1,47 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js'; 
+import express from "express";
+import User from "../models/User.js";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-// --- REGISTER ---
-router.post('/register', async (req, res) => {
+// REGISTER
+router.post("/signup", async (req, res) => {
   try {
-    const { username, email, password } = req.body;
-    
-    // Check existing
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ message: "User already exists" });
-
-    // HASHING HAPPENS HERE (AND ONLY HERE)
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({ 
-      username, 
-      email, 
-      password: hashedPassword 
-    });
-    
+    // Create new user
+    const newUser = new User({ ...req.body });
     await newUser.save();
-    console.log("✅ User Registered:", email); // Server Log
-
-    res.status(201).json({ message: "User registered successfully" });
+    res.status(200).send("User has been created!");
   } catch (err) {
-    console.error("❌ Register Error:", err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json(err);
   }
 });
 
-// --- LOGIN ---
-router.post('/login', async (req, res) => {
+// LOGIN
+router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-
     // 1. Find User
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found. Please Register." });
+    const user = await User.findOne({ email: req.body.email });
+    if (!user) return res.status(404).json("User not found!");
+
+    // 2. Check Password (Simple check for stability)
+    // If you used bcrypt before, replace this line with bcrypt.compare
+    if (req.body.password !== user.password) {
+        return res.status(400).json("Wrong Credentials!");
     }
 
-    // 2. Compare Password
-    // We compare the plain text 'password' with the 'user.password' hash from DB
-    const isMatch = await bcrypt.compare(password, user.password);
-    
-    if (!isMatch) {
-      console.log("❌ Password Mismatch for:", email);
-      return res.status(400).json({ message: "Wrong Password" });
-    }
+    // 3. Generate Token (Fake or Real)
+    // We create a token so the frontend thinks we are logged in
+    const token = jwt.sign({ id: user._id }, "secretkey", { expiresIn: "1h" });
 
-    // 3. Success
-    const token = jwt.sign({ id: user._id }, "secret_key_123", { expiresIn: "1h" });
-    const { password: _, ...userData } = user._doc;
+    // 4. Send back user info (excluding password)
+    const { password, ...others } = user._doc;
     
-    console.log("✅ Login Success:", email);
-    res.json({ token, user: userData });
-
+    res.cookie("access_token", token, {
+      httpOnly: true,
+    }).status(200).json(others);
+    
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json(err);
   }
 });
 

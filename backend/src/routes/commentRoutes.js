@@ -6,7 +6,6 @@ const router = express.Router();
 // 1. ADD COMMENT
 router.post("/", async (req, res) => {
     try {
-        // Create a new comment using data sent from frontend
         const newComment = new Comment({ ...req.body });
         const savedComment = await newComment.save();
         res.status(200).json(savedComment);
@@ -15,7 +14,7 @@ router.post("/", async (req, res) => {
     }
 });
 
-// 2. GET COMMENTS (by Video ID)
+// 2. GET COMMENTS BY VIDEO ID
 router.get("/:videoId", async (req, res) => {
     try {
         const comments = await Comment.find({ videoId: req.params.videoId });
