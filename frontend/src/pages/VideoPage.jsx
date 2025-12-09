@@ -1,80 +1,104 @@
-﻿import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import axios from 'axios';
-import Comments from '../components/Comments'; // Import the new component
-import '../App.css';
+﻿import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const VideoPage = () => {
   const { id } = useParams();
   const [video, setVideo] = useState(null);
-  const [user, setUser] = useState(null);
+  const [subscribed, setSubscribed] = useState(false); // New State for Toggle
 
   useEffect(() => {
-    const loggedInUser = localStorage.getItem("user");
-    if (loggedInUser) setUser(JSON.parse(loggedInUser));
-    
     const fetchVideo = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/videos/${id}`);
+        const res = await axios.get(`http://localhost:5000/api/videos/find/${id}`);
         setVideo(res.data);
-      } catch (err) {
-        console.error(err);
-      }
+        await axios.put(`http://localhost:5000/api/videos/view/${id}`);
+      } catch (err) { console.error("Error fetching video:", err); }
     };
     fetchVideo();
   }, [id]);
 
   const handleLike = async () => {
-    if (!user) return alert("Please login to like");
     try {
       const res = await axios.put(`http://localhost:5000/api/videos/like/${id}`);
-      setVideo(res.data);
-    } catch (err) {
-      console.error(err);
-    }
+      setVideo({ ...video, likes: res.data.likes }); 
+    } catch (err) { console.error(err); }
   };
 
   const handleDislike = async () => {
-    if (!user) return alert("Please login to dislike");
     try {
       const res = await axios.put(`http://localhost:5000/api/videos/dislike/${id}`);
-      setVideo(res.data);
-    } catch (err) {
-      console.error(err);
-    }
+      setVideo({ ...video, dislikes: res.data.dislikes }); 
+    } catch (err) { console.error(err); }
   };
 
-  if (!video) return <div style={{padding:"20px"}}>Loading...</div>;
+  // TOGGLE SUBSCRIBE LOGIC
+  const handleSubscribe = () => {
+    setSubscribed(!subscribed); // Toggle true/false
+  };
+
+  // HELPER FOR YOUTUBE LINKS
+  const getEmbedUrl = (url) => {
+    if (!url) return "";
+    if (url.includes("embed")) return url;
+    if (url.includes("watch?v=")) return url.replace("watch?v=", "embed/");
+    if (url.includes("youtu.be/")) return url.replace("youtu.be/", "youtube.com/embed/");
+    return url; 
+  };
+
+  if (!video) return <div style={{padding:'20px'}}>Loading video...</div>;
 
   return (
-    <div className="video-page-container">
-      <div className="video-wrapper">
-        <video 
-          src={video.videoUrl} 
-          controls 
-          className="video-player"
-          poster={video.thumbnailUrl}
-        ></video>
-        
-        <h1 className="video-title">{video.title}</h1>
-        
-        <div className="video-info">
-          <span>{video.views} views • {new Date(video.uploadDate).toLocaleDateString()}</span>
-          <div className="video-actions">
-            <button className="action-btn" onClick={handleLike}>👍 {video.likes}</button>
-            <button className="action-btn" onClick={handleDislike}>👎 {video.dislikes}</button>
-          </div>
-        </div>
-        
-        <div className="channel-desc">
-          <p className="uploader-name">{video.uploader}</p>
-          <p className="description">{video.description}</p>
-        </div>
+    <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
+      
+      {/* PLAYER */}
+      <div style={{ borderRadius: "10px", overflow: "hidden", backgroundColor: "black", boxShadow: "0 4px 8px rgba(0,0,0,0.2)" }}>
+        {video.videoUrl && video.videoUrl.includes("uploads") ? (
+          // Local File
+          <video controls autoPlay width="100%" height="500px" style={{ display: "block" }}>
+             <source key={video.videoUrl} src={video.videoUrl} type="video/mp4" />
+          </video>
+        ) : (
+          // External Link (YouTube)
+          <iframe
+            width="100%"
+            height="500px"
+            src={getEmbedUrl(video.videoUrl)} 
+            title="Video Player"
+            frameBorder="0"
+            allowFullScreen
+          ></iframe>
+        )}
+      </div>
 
-        <hr />
+      <h1 style={{ marginTop: "20px", fontSize: "24px" }}>{video.title}</h1>
+      
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #ccc", paddingBottom: "10px" }}>
+        <p style={{ color: "#555" }}>{video.views || 0} views</p>
         
-        {/* ADD COMMENTS SECTION */}
-        <Comments videoId={video._id} />
+        <div style={{ display: 'flex', gap: '10px' }}>
+            <button onClick={handleLike} style={{cursor:'pointer', padding:'8px 15px'}}>👍 {video.likes || 0}</button>
+            <button onClick={handleDislike} style={{cursor:'pointer', padding:'8px 15px'}}>👎 {video.dislikes || 0}</button>
+            
+            {/* TOGGLE BUTTON UI */}
+            <button 
+                onClick={handleSubscribe} 
+                style={{ 
+                    padding: "10px 20px", 
+                    backgroundColor: subscribed ? "#ccc" : "#cc0000", 
+                    color: subscribed ? "black" : "white", 
+                    border: "none", 
+                    cursor: "pointer",
+                    fontWeight: 'bold'
+                }}>
+                {subscribed ? "SUBSCRIBED" : "SUBSCRIBE"}
+            </button>
+        </div>
+      </div>
+
+      <div style={{ marginTop: "20px", backgroundColor: "#f9f9f9", padding: "15px", borderRadius: "8px" }}>
+        <h3>Description</h3>
+        <p>{video.description}</p>
       </div>
     </div>
   );

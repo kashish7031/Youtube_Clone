@@ -1,177 +1,119 @@
-﻿// frontend/src/pages/Channel.jsx
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Channel = () => {
-  // --- STATE ---
   const [videos, setVideos] = useState([]);
+  const navigate = useNavigate();
   
-  // Form State for Uploading
-  const [uploadData, setUploadData] = useState({
-    title: '',
-    description: '',
-    thumbnailUrl: '',
-    videoUrl: ''
-  });
+  // State for Texts
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState(''); // Text Input
+  const [videoUrl, setVideoUrl] = useState('');         // Text Input
+  
+  // State for Files
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
 
-  // State for Editing
-  const [editingId, setEditingId] = useState(null); // ID of video being edited
-  const [editTitle, setEditTitle] = useState('');
+  // AUTH CHECK
+  useEffect(() => {
+    const user = localStorage.getItem("user"); 
+    if (!user) { navigate('/login'); } // Kick out if not logged in
+  }, [navigate]);
 
-  // HARDCODED USER FOR TESTING (Replace this with: const { user } = useContext(AuthContext);)
-  const currentUser = { _id: "user01", name: "My Channel" }; 
+  const currentUser = { _id: "653c29926345678912345678", name: "My Channel" }; 
 
-  // --- FETCH VIDEOS (READ) ---
   useEffect(() => {
     const fetchVideos = async () => {
       try {
-        // Fetch videos only for this user
         const res = await axios.get(`http://localhost:5000/api/videos/user/${currentUser._id}`);
         setVideos(res.data);
-      } catch (err) {
-        console.error("Error fetching videos:", err);
-      }
+      } catch (err) { console.error(err); }
     };
     fetchVideos();
-  }, [currentUser._id]);
+  }, []);
 
-  // --- HANDLERS ---
-
-  // 1. CREATE (Upload)
   const handleUpload = async (e) => {
     e.preventDefault();
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("uploader", currentUser._id);
+    formData.append("channelId", "channel01");
+    
+    // Append Text URLs (if typed)
+    formData.append("thumbnailUrl", thumbnailUrl);
+    formData.append("videoUrl", videoUrl);
+    
+    // Append Files (if selected)
+    if (thumbnailFile) formData.append("thumbnail", thumbnailFile);
+    if (videoFile) formData.append("video", videoFile);
+
     try {
-      const res = await axios.post("http://localhost:5000/api/videos", {
-        ...uploadData,
-        uploader: currentUser._id,
-        channelId: "channel01" // Placeholder
+      const res = await axios.post("http://localhost:5000/api/videos", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      setVideos([...videos, res.data]); // Update UI instantly
-      setUploadData({ title: '', description: '', thumbnailUrl: '', videoUrl: '' }); // Reset form
-      alert("Video Uploaded Successfully!");
+      setVideos([...videos, res.data]);
+      alert("Uploaded Successfully!");
+      window.location.reload();
     } catch (err) {
       console.error(err);
+      alert("Upload Failed! Check console.");
     }
   };
 
-  // 2. DELETE
   const handleDelete = async (id) => {
-    if(!window.confirm("Are you sure you want to delete this video?")) return;
+    if(!window.confirm("Delete this video?")) return;
     try {
       await axios.delete(`http://localhost:5000/api/videos/${id}`);
       setVideos(videos.filter((v) => v._id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+    } catch (err) { console.error(err); }
   };
 
-  // 3. UPDATE (Start Editing)
-  const startEditing = (video) => {
-    setEditingId(video._id);
-    setEditTitle(video.title);
-  };
-
-  // 3. UPDATE (Save Changes)
-  const saveEdit = async (id) => {
-    try {
-      await axios.put(`http://localhost:5000/api/videos/${id}`, { title: editTitle });
-      setVideos(videos.map(v => v._id === id ? { ...v, title: editTitle } : v));
-      setEditingId(null); // Exit edit mode
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  // --- RENDER ---
   return (
-    <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
-      
-      {/* HEADER */}
-      <div style={{ marginBottom: '30px', borderBottom: '1px solid #ccc', paddingBottom: '20px' }}>
-        <h1>{currentUser.name} Dashboard</h1>
-        <p>Manage your content here.</p>
-      </div>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h1>{currentUser.name} Dashboard</h1>
 
-      {/* UPLOAD SECTION */}
-      <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '40px' }}>
-        <h2>Upload New Video</h2>
-        <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          <input 
-            type="text" 
-            placeholder="Video Title" 
-            value={uploadData.title}
-            onChange={(e) => setUploadData({...uploadData, title: e.target.value})}
-            required 
-            style={{ padding: '10px' }}
-          />
-           <input 
-            type="text" 
-            placeholder="Thumbnail Image URL" 
-            value={uploadData.thumbnailUrl}
-            onChange={(e) => setUploadData({...uploadData, thumbnailUrl: e.target.value})}
-            required 
-            style={{ padding: '10px' }}
-          />
-          <input 
-            type="text" 
-            placeholder="Video URL (mp4 or youtube link)" 
-            value={uploadData.videoUrl}
-            onChange={(e) => setUploadData({...uploadData, videoUrl: e.target.value})}
-            required 
-            style={{ padding: '10px' }}
-          />
-          <textarea 
-            placeholder="Description" 
-            value={uploadData.description}
-            onChange={(e) => setUploadData({...uploadData, description: e.target.value})}
-            style={{ padding: '10px' }}
-          />
-          <button type="submit" style={{ padding: '10px', backgroundColor: '#cc0000', color: 'white', border: 'none', cursor: 'pointer' }}>
-            UPLOAD VIDEO
-          </button>
+      <div style={{ backgroundColor: '#f0f0f0', padding: '20px', borderRadius: '10px', marginBottom: '30px' }}>
+        <h2>Upload Content</h2>
+        <form onSubmit={handleUpload} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+          
+          <input type="text" placeholder="Video Title" value={title} onChange={(e) => setTitle(e.target.value)} required style={{ padding: '8px' }} />
+
+          {/* HYBRID THUMBNAIL INPUT */}
+          <div style={{ border: '1px solid #ccc', padding: '10px', backgroundColor: 'white' }}>
+            <label style={{fontWeight:'bold'}}>Thumbnail (File OR URL):</label>
+            <div style={{display:'flex', gap:'10px', marginTop:'5px'}}>
+               <input type="file" accept="image/*" onChange={(e) => setThumbnailFile(e.target.files[0])} />
+               <span style={{alignSelf:'center'}}>OR</span>
+               <input type="text" placeholder="Paste Image URL..." value={thumbnailUrl} onChange={(e) => setThumbnailUrl(e.target.value)} style={{flex:1, padding:'5px'}} />
+            </div>
+          </div>
+
+          {/* HYBRID VIDEO INPUT */}
+          <div style={{ border: '1px solid #ccc', padding: '10px', backgroundColor: 'white' }}>
+            <label style={{fontWeight:'bold'}}>Video (File OR URL):</label>
+            <div style={{display:'flex', gap:'10px', marginTop:'5px'}}>
+               <input type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files[0])} />
+               <span style={{alignSelf:'center'}}>OR</span>
+               <input type="text" placeholder="Paste YouTube URL..." value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)} style={{flex:1, padding:'5px'}} />
+            </div>
+          </div>
+
+          <textarea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} style={{ padding: '8px' }} />
+
+          <button type="submit" style={{ padding: '10px', backgroundColor: 'red', color: 'white', border: 'none', cursor: 'pointer' }}>UPLOAD</button>
         </form>
       </div>
 
-      {/* VIDEO LIST SECTION */}
-      <h2>My Videos ({videos.length})</h2>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
+      <div>
         {videos.map((video) => (
-          <div key={video._id} style={{ border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
-            {/* Thumbnail */}
-            <img src={video.thumbnailUrl} alt={video.title} style={{ width: '100%', height: '150px', objectFit: 'cover' }} />
-            
-            <div style={{ padding: '10px' }}>
-              {/* Edit Mode Logic */}
-              {editingId === video._id ? (
-                <div>
-                  <input 
-                    type="text" 
-                    value={editTitle} 
-                    onChange={(e) => setEditTitle(e.target.value)} 
-                    style={{ width: '100%', marginBottom: '5px' }}
-                  />
-                  <button onClick={() => saveEdit(video._id)} style={{ marginRight: '5px', backgroundColor: 'green', color: 'white', border:'none', padding:'5px' }}>Save</button>
-                  <button onClick={() => setEditingId(null)} style={{ backgroundColor: 'gray', color: 'white', border:'none', padding:'5px' }}>Cancel</button>
-                </div>
-              ) : (
-                <h4 style={{ margin: '0 0 10px 0' }}>{video.title}</h4>
-              )}
-              
-              <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
-                <button 
-                  onClick={() => startEditing(video)}
-                  style={{ flex: 1, padding: '5px', cursor: 'pointer' }}
-                >
-                  Edit
-                </button>
-                <button 
-                  onClick={() => handleDelete(video._id)}
-                  style={{ flex: 1, padding: '5px', backgroundColor: 'red', color: 'white', border: 'none', cursor: 'pointer' }}
-                >
-                  Delete
-                </button>
-              </div>
+          <div key={video._id} style={{ display: 'flex', gap: '10px', marginBottom: '10px', border: '1px solid #ddd', padding: '10px' }}>
+            <img src={video.thumbnailUrl} alt={video.title} style={{ width: '120px', height: '80px', objectFit: 'cover' }} onError={(e) => { e.target.src = "https://via.placeholder.com/150"; }} />
+            <div style={{ flex: 1 }}>
+              <h3>{video.title}</h3>
+              <button onClick={() => handleDelete(video._id)} style={{ backgroundColor: 'red', color: 'white', border: 'none', padding: '5px 10px' }}>Delete</button>
             </div>
           </div>
         ))}
