@@ -24,7 +24,21 @@ router.get("/:videoId", async (req, res) => {
     }
 });
 
-// 3. DELETE COMMENT
+// 3. EDIT COMMENT (New Route)
+router.put("/:id", async (req, res) => {
+    try {
+        const updatedComment = await Comment.findByIdAndUpdate(
+            req.params.id,
+            { desc: req.body.desc },
+            { new: true } // Return the updated version
+        );
+        res.status(200).json(updatedComment);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
+
+// 4. DELETE COMMENT
 router.delete("/:id", async (req, res) => {
     try {
         await Comment.findByIdAndDelete(req.params.id);
