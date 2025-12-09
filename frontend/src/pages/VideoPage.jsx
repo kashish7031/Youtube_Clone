@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import Comments from "../components/Comments"; // <--- IMPORT THIS
+import Comments from "../components/Comments"; 
 
 const VideoPage = () => {
   const { id } = useParams();
@@ -48,25 +48,40 @@ const VideoPage = () => {
   return (
     <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
       
-      {/* VIDEO PLAYER */}
-      <div style={{ borderRadius: "10px", overflow: "hidden", backgroundColor: "black" }}>
+      {/* RESPONSIVE PLAYER CONTAINER */}
+      <div className="video-container">
         {video.videoUrl && video.videoUrl.includes("uploads") ? (
-          <video controls autoPlay width="100%" height="500px" style={{ display: "block" }}>
+          <video controls autoPlay>
              <source key={video.videoUrl} src={video.videoUrl} type="video/mp4" />
           </video>
         ) : (
-          <iframe width="100%" height="500px" src={getEmbedUrl(video.videoUrl)} title="Video Player" frameBorder="0" allowFullScreen></iframe>
+          <iframe 
+            src={getEmbedUrl(video.videoUrl)} 
+            title="Video Player" 
+            frameBorder="0" 
+            allowFullScreen
+          ></iframe>
         )}
       </div>
 
-      <h1 style={{ marginTop: "20px", fontSize: "24px" }}>{video.title}</h1>
+      <h1 style={{ marginTop: "20px", fontSize: "1.5rem" }}>{video.title}</h1>
       
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #ccc", paddingBottom: "10px" }}>
-        <p style={{ color: "#555" }}>{video.views || 0} views</p>
+      {/* Stats and Buttons (Responsive Wrap) */}
+      <div style={{ 
+        display: "flex", 
+        flexWrap: "wrap", 
+        justifyContent: "space-between", 
+        alignItems: "center", 
+        borderBottom: "1px solid #ccc", 
+        paddingBottom: "10px", 
+        gap: "10px" 
+      }}>
+        <p style={{ color: "#555", margin: 0 }}>{video.views || 0} views</p>
+        
         <div style={{ display: 'flex', gap: '10px' }}>
-            <button onClick={handleLike} style={{cursor:'pointer', padding:'8px 15px'}}>👍 {video.likes || 0}</button>
-            <button onClick={handleDislike} style={{cursor:'pointer', padding:'8px 15px'}}>👎 {video.dislikes || 0}</button>
-            <button onClick={handleSubscribe} style={{ padding: "10px 20px", backgroundColor: subscribed ? "#ccc" : "#cc0000", color: subscribed ? "black" : "white", border: "none", cursor: "pointer", fontWeight: 'bold' }}>
+            <button onClick={handleLike} style={{cursor:'pointer', padding:'8px 15px', border: 'none', backgroundColor: '#f0f0f0', borderRadius: '18px'}}>👍 {video.likes || 0}</button>
+            <button onClick={handleDislike} style={{cursor:'pointer', padding:'8px 15px', border: 'none', backgroundColor: '#f0f0f0', borderRadius: '18px'}}>👎 {video.dislikes || 0}</button>
+            <button onClick={handleSubscribe} style={{ padding: "10px 20px", backgroundColor: subscribed ? "#ccc" : "#cc0000", color: subscribed ? "black" : "white", border: "none", cursor: "pointer", fontWeight: 'bold', borderRadius: '18px' }}>
                 {subscribed ? "SUBSCRIBED" : "SUBSCRIBE"}
             </button>
         </div>
@@ -77,7 +92,6 @@ const VideoPage = () => {
         <p>{video.description}</p>
       </div>
 
-      {/* --- COMMENTS SECTION ADDED HERE --- */}
       <hr style={{margin: '30px 0', border: '0', borderTop: '1px solid #ccc'}} />
       <h3>{video.comments ? video.comments.length : "0"} Comments</h3>
       <Comments videoId={video._id} />
