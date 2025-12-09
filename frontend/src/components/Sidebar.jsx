@@ -2,8 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const Sidebar = ({ menuOpen }) => {
-  // If menuOpen is false, we return null (hide sidebar) 
-  // OR we can return a "mini" version. For simplicity, we hide it on mobile logic.
+  // If the menu is closed, we hide the sidebar completely
   if (!menuOpen) return null;
 
   return (
@@ -12,40 +11,41 @@ const Sidebar = ({ menuOpen }) => {
         backgroundColor: 'white', 
         height: '100vh', 
         position: 'sticky', 
-        top: '60px', // Below Navbar
+        top: '60px', // Sticks below the Navbar
         padding: '10px 20px', 
-        borderRight: '1px solid #ccc',
+        borderRight: '1px solid #e5e5e5',
         minWidth: '200px',
-        display: window.innerWidth < 768 ? 'none' : 'block' // Simple responsiveness check
+        maxWidth: '220px',
+        overflowY: 'auto' // Allows scrolling inside sidebar if content is long
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         
-        {/* Section 1 */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', padding: '10px', borderRadius: '10px', textDecoration: 'none', color: 'black' }}>
-           <span>🏠</span> 
-           <span style={{ fontWeight: 'bold' }}>Home</span>
+        {/* Main Section */}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '10px', textDecoration: 'none', color: 'black', borderRadius: '10px' }}>
+           <span>🏠</span> <span style={{ fontWeight: 'bold' }}>Home</span>
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', padding: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '10px', cursor: 'pointer', borderRadius: '10px' }}>
            <span>🎬</span> <span>Shorts</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', padding: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '10px', cursor: 'pointer', borderRadius: '10px' }}>
            <span>📺</span> <span>Subscriptions</span>
         </div>
 
-        <hr style={{ border: '0.5px solid #e5e5e5', width: '100%' }} />
+        <hr style={{ margin: '10px 0', border: '0', borderTop: '1px solid #e5e5e5' }} />
 
-        {/* Section 2 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', padding: '10px' }}>
+        {/* Library Section */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '10px', cursor: 'pointer', borderRadius: '10px' }}>
            <span>📚</span> <span>Library</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', cursor: 'pointer', padding: '10px' }}>
-           <span>History</span> <span>History</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '10px', cursor: 'pointer', borderRadius: '10px' }}>
+           <span>📜</span> <span>History</span>
         </div>
         
-        <hr style={{ border: '0.5px solid #e5e5e5', width: '100%' }} />
+        <hr style={{ margin: '10px 0', border: '0', borderTop: '1px solid #e5e5e5' }} />
 
-        <div style={{ fontSize: '12px', color: '#555', marginTop: '10px' }}>
-            <p>Sign in to like videos, comment, and subscribe.</p>
+        {/* Sign In Prompt (Optional UI polish) */}
+        <div style={{ padding: '10px' }}>
+            <p style={{fontSize: '13px'}}>Sign in to like videos, comment, and subscribe.</p>
             <Link to="/login">
                 <button style={{ padding: '5px 15px', color: '#065fd4', border: '1px solid #ccc', borderRadius: '18px', background: 'white', cursor: 'pointer', fontWeight: 'bold' }}>
                     Sign in

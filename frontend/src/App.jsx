@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar'; 
-import Sidebar from './components/Sidebar'; // <--- Import Sidebar
+import Sidebar from './components/Sidebar'; // Ensure this path is correct
 import Home from './pages/Home';         
 import VideoPage from './pages/VideoPage'; 
 import Login from './pages/Login';       
@@ -9,22 +9,22 @@ import Register from './pages/Register';
 import Channel from './pages/Channel';   
 
 function App() {
-  // State to toggle sidebar
+  // STATE: Controls if sidebar is visible (true) or hidden (false)
   const [menuOpen, setMenuOpen] = useState(true);
 
   return (
     <BrowserRouter>
-      {/* Pass state control to Navbar */}
+      {/* 1. Navbar gets the state setter to toggle the menu */}
       <Navbar menuOpen={menuOpen} setMenuOpen={setMenuOpen} /> 
       
-      {/* Create a Flex container to hold Sidebar + Pages */}
+      {/* Main Layout Container */}
       <div style={{ display: 'flex' }}>
         
-        {/* Sidebar on the left */}
+        {/* 2. Sidebar gets the state to decide if it shows up */}
         <Sidebar menuOpen={menuOpen} />
         
-        {/* Main Content on the right */}
-        <div style={{ flex: 7, padding: '20px' }}>
+        {/* 3. Main Content Area */}
+        <div style={{ flex: 7, padding: '20px', backgroundColor: '#f9f9f9', minHeight: '100vh' }}>
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />

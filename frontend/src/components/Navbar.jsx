@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom"; 
 
-// Accept the toggle function as a prop
-const Navbar = ({ setMenuOpen, menuOpen }) => {
+// Accept props to control the sidebar state
+const Navbar = ({ menuOpen, setMenuOpen }) => {
   const [q, setQ] = useState("");
   const navigate = useNavigate();
   const user = localStorage.getItem("user");
@@ -24,13 +24,13 @@ const Navbar = ({ setMenuOpen, menuOpen }) => {
   return (
     <nav style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #ccc', alignItems: 'center', backgroundColor: 'white', position: 'sticky', top: 0, zIndex: 100 }}>
       
-      {/* LEFT: Menu Toggle + Logo */}
+      {/* LEFT: Toggle + Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         
-        {/* HAMBURGER MENU BUTTON */}
+        {/* HAMBURGER TOGGLE BUTTON */}
         <div 
             onClick={() => setMenuOpen(!menuOpen)} 
-            style={{ cursor: 'pointer', fontSize: '20px', padding: '5px' }}
+            style={{ cursor: 'pointer', fontSize: '24px', padding: '5px', userSelect: 'none' }}
         >
             ☰
         </div>
