@@ -1,65 +1,38 @@
-﻿import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Comment from './Comment';
+﻿import express from 'express';
+import Comment from '../models/Comment.js';
 
-const Comments = ({ videoId }) => {
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState("");
+const router = express.Router();
 
-  const currentUser = { _id: "653c29926345678912345678", name: "My Channel" }; 
-
-  useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const res = await axios.get(`http://localhost:5000/api/comments/${videoId}`);
-        setComments(res.data);
-      } catch (err) { console.log(err); }
-    };
-    fetchComments();
-  }, [videoId]);
-
-  const handleComment = async (e) => {
-    e.preventDefault();
-    if (!newComment) return;
+// 1. ADD COMMENT
+router.post("/", async (req, res) => {
     try {
-      const res = await axios.post("http://localhost:5000/api/comments", {
-        desc: newComment, videoId, userId: currentUser._id,
-      });
-      setComments([...comments, res.data]);
-      setNewComment(""); 
-    } catch (err) { console.log(err); }
-  };
+        // Create a new comment using data sent from frontend
+        const newComment = new Comment({ ...req.body });
+        const savedComment = await newComment.save();
+        res.status(200).json(savedComment);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
 
-  // --- NEW DELETE FUNCTION ---
-  const handleDelete = async (id) => {
+// 2. GET COMMENTS (by Video ID)
+router.get("/:videoId", async (req, res) => {
     try {
-        await axios.delete(`http://localhost:5000/api/comments/${id}`);
-        setComments(comments.filter(c => c._id !== id));
-    } catch (err) { console.log(err); }
-  };
+        const comments = await Comment.find({ videoId: req.params.videoId });
+        res.status(200).json(comments);
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
 
-  return (
-    <div style={{ marginTop: '20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-        <img src="https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png" style={{ width: '50px', height: '50px', borderRadius: '50%' }} />
-        <input style={{ border: 'none', borderBottom: '1px solid #ccc', width: '100%', padding: '10px', outline: 'none' }} placeholder="Add a comment..." value={newComment} onChange={(e) => setNewComment(e.target.value)} />
-        <button onClick={handleComment} style={{ padding: '10px 15px', backgroundColor: '#cc0000', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '3px' }}>Comment</button>
-      </div>
+// 3. DELETE COMMENT
+router.delete("/:id", async (req, res) => {
+    try {
+        await Comment.findByIdAndDelete(req.params.id);
+        res.status(200).json("The comment has been deleted.");
+    } catch (err) {
+        res.status(500).json(err);
+    }
+});
 
-      {comments.map(comment => (
-        <div key={comment._id} style={{position: 'relative'}}>
-            <Comment comment={comment} />
-            {/* Simple Delete Button */}
-            <button 
-                onClick={() => handleDelete(comment._id)}
-                style={{ position: 'absolute', right: 0, top: '30px', color: 'red', border: 'none', background: 'none', cursor: 'pointer', fontSize: '12px' }}
-            >
-                Delete
-            </button>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export default Comments;
+export default router;
