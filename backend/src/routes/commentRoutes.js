@@ -3,19 +3,19 @@ import Comment from '../models/Comment.js';
 
 const router = express.Router();
 
-// 1. ADD COMMENT (Placeholder logic for now)
+// 1. ADD COMMENT
 router.post("/", async (req, res) => {
     try {
-        const newComment = new Comment({ ...req.body, userId: req.user.id });
+        // We accept userId directly from the body for now
+        const newComment = new Comment({ ...req.body });
         const savedComment = await newComment.save();
         res.status(200).json(savedComment);
     } catch (err) {
-        // Return dummy success for now to prevent crashes until auth is perfect
-        res.status(200).send("Comment route reached");
+        res.status(500).json(err);
     }
 });
 
-// 2. GET COMMENTS
+// 2. GET COMMENTS BY VIDEO ID
 router.get("/:videoId", async (req, res) => {
     try {
         const comments = await Comment.find({ videoId: req.params.videoId });
