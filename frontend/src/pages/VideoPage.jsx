@@ -48,7 +48,8 @@ const VideoPage = () => {
   return (
     <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
       
-      <div style={{ borderRadius: "10px", overflow: "hidden", backgroundColor: "black", boxShadow: "0 4px 8px rgba(0,0,0,0.2)" }}>
+      {/* VIDEO PLAYER */}
+      <div style={{ borderRadius: "10px", overflow: "hidden", backgroundColor: "black" }}>
         {video.videoUrl && video.videoUrl.includes("uploads") ? (
           <video controls autoPlay width="100%" height="500px" style={{ display: "block" }}>
              <source key={video.videoUrl} src={video.videoUrl} type="video/mp4" />
@@ -76,9 +77,9 @@ const VideoPage = () => {
         <p>{video.description}</p>
       </div>
 
-      {/* --- NEW COMMENTS SECTION --- */}
+      {/* --- COMMENTS SECTION ADDED HERE --- */}
       <hr style={{margin: '30px 0', border: '0', borderTop: '1px solid #ccc'}} />
-      <h3>Comments</h3>
+      <h3>{video.comments ? video.comments.length : "0"} Comments</h3>
       <Comments videoId={video._id} />
 
     </div>
