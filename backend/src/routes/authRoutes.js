@@ -6,42 +6,47 @@ const router = express.Router();
 
 // REGISTER
 router.post("/signup", async (req, res) => {
+  console.log("--- Register Attempt ---");
+  console.log("Received Data:", req.body); // Check your terminal to see this!
+
   try {
-    // Create new user
     const newUser = new User({ ...req.body });
     await newUser.save();
+    console.log("User Created Successfully!");
     res.status(200).send("User has been created!");
   } catch (err) {
-    res.status(500).json(err);
+    console.error("Register Error:", err);
+    
+    // BETTER ERROR HANDLING
+    if (err.code === 11000) {
+        // This is the code for "Duplicate Key" (User already exists)
+        return res.status(409).send("User already exists! Try a different username or email.");
+    }
+    if (err.message) {
+        // Send the specific error message (like "Path name is required")
+        return res.status(500).send(err.message);
+    }
+    
+    res.status(500).send("Unknown Server Error");
   }
 });
 
 // LOGIN
 router.post("/login", async (req, res) => {
   try {
-    // 1. Find User
     const user = await User.findOne({ email: req.body.email });
-    if (!user) return res.status(404).json("User not found!");
+    if (!user) return res.status(404).send("User not found!");
 
-    // 2. Check Password (Simple check for stability)
-    // If you used bcrypt before, replace this line with bcrypt.compare
     if (req.body.password !== user.password) {
-        return res.status(400).json("Wrong Credentials!");
+        return res.status(400).send("Wrong Credentials!");
     }
 
-    // 3. Generate Token (Fake or Real)
-    // We create a token so the frontend thinks we are logged in
-    const token = jwt.sign({ id: user._id }, "secretkey", { expiresIn: "1h" });
-
-    // 4. Send back user info (excluding password)
+    const token = jwt.sign({ id: user._id }, "secretkey");
     const { password, ...others } = user._doc;
     
-    res.cookie("access_token", token, {
-      httpOnly: true,
-    }).status(200).json(others);
-    
+    res.status(200).json({ ...others, token });
   } catch (err) {
-    res.status(500).json(err);
+    res.status(500).send(err.message);
   }
 });
 

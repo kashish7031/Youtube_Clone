@@ -3,7 +3,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom"; 
 
 const Register = () => {
-  const [username, setUsername] = useState(""); // Variable name matches backend
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
@@ -11,19 +11,18 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      // Sending 'username' to the backend
-      const res = await axios.post("http://localhost:5000/api/auth/signup", {
+      await axios.post("http://localhost:5000/api/auth/signup", {
         username, 
         email,
         password,
       });
       
-      alert("Registration Successful! You can now login.");
+      alert("Registration Successful! Please Login.");
       navigate("/login");
     } catch (err) {
       console.error(err);
-      // This will show the exact reason if it fails again
-      alert(err.response?.data?.message || err.response?.data || "Registration Failed");
+      // Now we just show the response data directly because it's a string
+      alert(err.response?.data || "Registration Failed");
     }
   };
 
