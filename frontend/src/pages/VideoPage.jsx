@@ -2,6 +2,7 @@
 import axios from "axios";
 import { useParams } from "react-router-dom";
 import Comments from "../components/Comments"; 
+import Loader from "../components/Loader"; // <--- IMPORT THIS
 
 const VideoPage = () => {
   const { id } = useParams();
@@ -43,12 +44,13 @@ const VideoPage = () => {
     return url; 
   };
 
-  if (!video) return <div style={{padding:'20px'}}>Loading video...</div>;
+  // USE LOADER HERE
+  if (!video) return <Loader />;
 
   return (
     <div style={{ padding: "20px", maxWidth: "1000px", margin: "0 auto" }}>
       
-      {/* RESPONSIVE PLAYER CONTAINER */}
+      {/* RESPONSIVE PLAYER */}
       <div className="video-container">
         {video.videoUrl && video.videoUrl.includes("uploads") ? (
           <video controls autoPlay>
@@ -66,16 +68,7 @@ const VideoPage = () => {
 
       <h1 style={{ marginTop: "20px", fontSize: "1.5rem" }}>{video.title}</h1>
       
-      {/* Stats and Buttons (Responsive Wrap) */}
-      <div style={{ 
-        display: "flex", 
-        flexWrap: "wrap", 
-        justifyContent: "space-between", 
-        alignItems: "center", 
-        borderBottom: "1px solid #ccc", 
-        paddingBottom: "10px", 
-        gap: "10px" 
-      }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #ccc", paddingBottom: "10px", gap: "10px" }}>
         <p style={{ color: "#555", margin: 0 }}>{video.views || 0} views</p>
         
         <div style={{ display: 'flex', gap: '10px' }}>
