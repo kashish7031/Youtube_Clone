@@ -49,9 +49,41 @@ A fully functional video streaming application built using the MERN stack (Mongo
 
 ## ⚙️ Installation & Setup
 
+## Run Locally
+
 Follow these steps to run the project locally.
 
 ### 1. Clone the Repository
+Clone the project to your local machine.
+
 ```bash
-git clone <https://github.com/kashish7031/Youtube_Clone>
+git clone [https://github.com/kashish7031/Youtube_Clone](https://github.com/kashish7031/Youtube_Clone)
 cd youtube-clone
+```
+### 2. Install Dependencies
+Install the necessary packages using npm.
+
+```bash
+
+npm install
+```
+### 3. Set Up Environment Variables
+This project requires a RapidAPI key to fetch video data.
+
+Create a file named .env in the root directory.
+
+Add your API key inside the file:
+```bash
+Code snippet
+
+REACT_APP_RAPID_API_KEY=your_api_key_here
+```
+### 4. Start the Application
+Run the project in development mode.
+
+```Bash
+
+npm start
+```
+## Video Preview
+[![YouTube Clone Demo](https://img.youtube.com/vi/KsX3bUfBOJo/maxresdefault.jpg)](https://www.youtube.com/watch?v=KsX3bUfBOJo)
