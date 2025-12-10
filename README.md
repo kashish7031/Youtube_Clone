@@ -53,5 +53,5 @@ Follow these steps to run the project locally.
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-github-repo-url>
+git clone <https://github.com/kashish7031/Youtube_Clone>
 cd youtube-clone
