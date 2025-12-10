@@ -1,51 +1,24 @@
-﻿import express from 'express';
-import Comment from '../models/Comment.js';
+﻿import { Router } from "express";
+import {
+    addComment,
+    deleteComment,
+    getVideoComments,
+    updateComment,
+} from "../controllers/commentController.js";
+import { verifyJWT } from "../middleware/authMiddleware.js";
 
-const router = express.Router();
+const router = Router();
 
-// 1. ADD COMMENT
-router.post("/", async (req, res) => {
-    try {
-        const newComment = new Comment({ ...req.body });
-        const savedComment = await newComment.save();
-        res.status(200).json(savedComment);
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
+// 1. Get Comments (Public) & Add Comment (Protected)
+// Matches: /api/v1/comments/:videoId
+router.route("/:videoId")
+    .get(getVideoComments) // Anyone can read comments
+    .post(verifyJWT, addComment); // Only logged-in users can post
 
-// 2. GET COMMENTS BY VIDEO ID
-router.get("/:videoId", async (req, res) => {
-    try {
-        const comments = await Comment.find({ videoId: req.params.videoId });
-        res.status(200).json(comments);
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
-
-// 3. EDIT COMMENT (New Route)
-router.put("/:id", async (req, res) => {
-    try {
-        const updatedComment = await Comment.findByIdAndUpdate(
-            req.params.id,
-            { desc: req.body.desc },
-            { new: true } // Return the updated version
-        );
-        res.status(200).json(updatedComment);
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
-
-// 4. DELETE COMMENT
-router.delete("/:id", async (req, res) => {
-    try {
-        await Comment.findByIdAndDelete(req.params.id);
-        res.status(200).json("The comment has been deleted.");
-    } catch (err) {
-        res.status(500).json(err);
-    }
-});
+// 2. Delete & Update Comment (Protected)
+// Matches: /api/v1/comments/c/:commentId
+router.route("/c/:commentId")
+    .delete(verifyJWT, deleteComment)
+    .patch(verifyJWT, updateComment);
 
 export default router;

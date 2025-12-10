@@ -1,121 +1,189 @@
-// frontend/src/pages/Upload.jsx
-import React, { useState, useContext } from "react";
-import api from "../api/axios";
-import { AuthContext } from "../context/AuthContext";
+import React, { useState } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-export default function Upload() {
-  const { user } = useContext(AuthContext);
-  const navigate = useNavigate();
-
-  const [file, setFile] = useState(null);
+function Upload() {
+  const [uploadType, setUploadType] = useState("file"); // Default to 'file'
+  
+  // Data States
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [tags, setTags] = useState("");
-  const [progress, setProgress] = useState(0);
+  const [category, setCategory] = useState("Music");
+  
+  // File Inputs
+  const [videoFile, setVideoFile] = useState(null);
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  
+  // URL Inputs
+  const [videoUrl, setVideoUrl] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
+
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  if (!user) {
-    return (
-      <div style={{ padding: 20 }}>
-        <h3>You must be signed in to upload videos.</h3>
-      </div>
-    );
-  }
+  const categories = ["Music", "Gaming", "News", "Sports", "Learning", "Comedy", "Shorts"];
 
-  const onFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleSubmit = async (e) => {
+  const handlePublish = async (e) => {
     e.preventDefault();
-    if (!file) return alert("Select a video file first");
-    if (!title.trim()) return alert("Add a title");
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("category", category);
+
+    // LOGIC: If 'file' mode is selected, only send files. If 'url' mode, send URLs.
+    if (uploadType === "file") {
+        if (!videoFile || !thumbnailFile) {
+            setLoading(false);
+            return alert("Please select a video file AND a thumbnail file.");
+        }
+        formData.append("videoFile", videoFile);
+        formData.append("thumbnail", thumbnailFile);
+    } else {
+        if (!videoUrl || !thumbnailUrl) {
+            setLoading(false);
+            return alert("Please enter a video URL AND a thumbnail URL.");
+        }
+        formData.append("videoUrl", videoUrl);
+        formData.append("thumbnailUrl", thumbnailUrl);
+    }
 
     try {
-      setLoading(true);
-      const form = new FormData();
-      form.append("video", file);
-      form.append("title", title);
-      form.append("description", description);
-      form.append("tags", tags);
-
-      const res = await api.post("/videos/upload", form, {
+      await axios.post("http://localhost:5000/api/v1/videos", formData, {
         headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (ev) => {
-          if (ev.total) {
-            setProgress(Math.round((ev.loaded * 100) / ev.total));
-          }
-        }
+        withCredentials: true 
       });
-
-      // server should return the created video object (with _id)
-      const video = res.data;
+      alert("Video Published Successfully!");
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed. " + (error.response?.data?.message || ""));
+    } finally {
       setLoading(false);
-      setProgress(0);
-
-      // redirect to video page (adjust path if your route differs)
-      navigate(`/video/${video._id}`);
-    } catch (err) {
-      console.error(err);
-      setLoading(false);
-      alert(err.response?.data?.message || "Upload failed");
     }
   };
 
   return (
-    <div style={{ maxWidth: 900, margin: "2rem auto", padding: 16 }}>
-      <h2>Upload Video</h2>
-
-      <form onSubmit={handleSubmit} style={{ display: "grid", gap: 12 }}>
-        <label>
-          Video file
-          <input type="file" accept="video/*" onChange={onFileChange} />
-        </label>
-
-        <label>
-          Title
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter a short title"
-            style={{ width: "100%", padding: 8 }}
-          />
-        </label>
-
-        <label>
-          Description
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Add a description"
-            style={{ width: "100%", minHeight: 120, padding: 8 }}
-          />
-        </label>
-
-        <label>
-          Tags (comma separated)
-          <input
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="e.g. music,education"
-            style={{ width: "100%", padding: 8 }}
-          />
-        </label>
-
-        <div>
-          <button type="submit" disabled={loading} style={{ padding: "8px 12px" }}>
-            {loading ? "Uploading..." : "Upload"}
-          </button>
+    <div className="w-full min-h-screen bg-black text-white p-8 flex justify-center pb-20 overflow-y-auto">
+      <div className="w-full max-w-2xl bg-gray-900 p-6 rounded-xl border border-gray-800 h-fit">
+        <h1 className="text-2xl font-bold mb-6">Create Video</h1>
+        
+        {/* Toggle Switch */}
+        <div className="flex gap-4 mb-6 p-1 bg-gray-800 rounded-lg">
+            <button 
+                type="button"
+                onClick={() => setUploadType("file")}
+                className={`flex-1 py-2 rounded-md font-medium transition ${uploadType === "file" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}
+            >
+                Upload File
+            </button>
+            <button 
+                 type="button"
+                 onClick={() => setUploadType("url")}
+                 className={`flex-1 py-2 rounded-md font-medium transition ${uploadType === "url" ? "bg-blue-600 text-white" : "text-gray-400 hover:text-white"}`}
+            >
+                Paste URL
+            </button>
         </div>
 
-        {loading && (
-          <div style={{ marginTop: 8 }}>
-            <div>Progress: {progress}%</div>
-            <progress value={progress} max="100" style={{ width: "100%" }} />
+        <form onSubmit={handlePublish} className="space-y-6">
+          
+          {/* OPTION 1: File Upload */}
+          {uploadType === "file" && (
+             <div className="space-y-4">
+                 <div className="border-2 border-dashed border-gray-700 p-4 rounded-xl text-center">
+                    <p className="mb-2 text-sm text-gray-400">Video File (.mp4)</p>
+                    <input 
+                        type="file" 
+                        accept="video/*" 
+                        onChange={(e) => setVideoFile(e.target.files[0])} 
+                        className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white" 
+                    />
+                 </div>
+                 <div className="border-2 border-dashed border-gray-700 p-4 rounded-xl text-center">
+                    <p className="mb-2 text-sm text-gray-400">Thumbnail Image (.jpg, .png)</p>
+                    <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={(e) => setThumbnailFile(e.target.files[0])} 
+                        className="text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:bg-blue-600 file:text-white" 
+                    />
+                 </div>
+             </div>
+          )}
+
+          {/* OPTION 2: URL Input */}
+          {uploadType === "url" && (
+             <div className="space-y-4">
+                <div>
+                    <label className="block mb-1 text-sm text-gray-400">Video URL</label>
+                    <input 
+                        type="url" 
+                        value={videoUrl} 
+                        onChange={(e) => setVideoUrl(e.target.value)} 
+                        className="w-full bg-black border border-gray-700 rounded p-3 focus:border-blue-500 text-white" 
+                        placeholder="https://..." 
+                    />
+                </div>
+                <div>
+                    <label className="block mb-1 text-sm text-gray-400">Thumbnail URL</label>
+                    <input 
+                        type="url" 
+                        value={thumbnailUrl} 
+                        onChange={(e) => setThumbnailUrl(e.target.value)} 
+                        className="w-full bg-black border border-gray-700 rounded p-3 focus:border-blue-500 text-white" 
+                        placeholder="https://..." 
+                    />
+                </div>
+             </div>
+          )}
+
+          {/* Common Fields */}
+          <div>
+             <label className="block mb-1 text-sm text-gray-400">Title</label>
+             <input 
+                type="text" 
+                value={title} 
+                onChange={(e) => setTitle(e.target.value)} 
+                className="w-full bg-black border border-gray-700 rounded p-3 focus:border-blue-500 text-white" 
+                required
+            />
           </div>
-        )}
-      </form>
+
+          <div>
+             <label className="block mb-1 text-sm text-gray-400">Description</label>
+             <textarea 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                rows="3"
+                className="w-full bg-black border border-gray-700 rounded p-3 focus:border-blue-500 text-white" 
+                required
+            />
+          </div>
+
+          <div>
+             <label className="block mb-1 text-sm text-gray-400">Category</label>
+             <select 
+                value={category} 
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-black border border-gray-700 rounded p-3 focus:border-blue-500 text-white"
+            >
+                {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+             </select>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full bg-green-600 hover:bg-green-500 py-3 rounded font-bold transition text-white"
+          >
+            {loading ? "Publishing..." : "Publish Video"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
+
+export default Upload;

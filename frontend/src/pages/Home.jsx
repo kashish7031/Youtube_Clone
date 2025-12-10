@@ -1,84 +1,109 @@
-﻿import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Link, useLocation } from 'react-router-dom'; 
+﻿import React, { useEffect, useState } from "react";
+import axios from "axios";
+import VideoCard from "../components/VideoCard";
+import { useSearchParams } from "react-router-dom";
 
-const Home = () => {
+function Home() {
   const [videos, setVideos] = useState([]);
-  const path = useLocation().search; 
+  const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState("All"); // Default category
+  const [searchParams] = useSearchParams();
+  const searchQuery = searchParams.get("query"); // Read search from URL
 
-  // CATEGORIES LIST
-  const categories = ["All", "Music", "Gaming", "Tech", "Movies", "Education"];
+  // The Categories List
+  const categories = [
+    "All", 
+    "Music", 
+    "Gaming", 
+    "News", 
+    "Sports", 
+    "Learning", 
+    "Fashion", 
+    "Comedy", 
+    "Shorts"
+  ];
 
   useEffect(() => {
     const fetchVideos = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:5000/api/videos${path}`);
-        setVideos(res.data);
-      } catch (err) {
-        console.log("Error fetching videos:", err);
+        // Build the API URL dynamically
+        let url = "http://localhost:5000/api/v1/videos?";
+        
+        // 1. Add Category Filter (if not 'All')
+        if (filterType !== "All") {
+             url += `category=${filterType}&`; 
+        }
+        
+        // 2. Add Search Query (if typed in Navbar)
+        if (searchQuery) {
+            url += `query=${searchQuery}&`;
+        }
+        
+        const response = await axios.get(url);
+        
+        // Handle response data structure (sometimes nested in docs)
+        const data = response.data.data.docs || response.data.data;
+        setVideos(data);
+
+      } catch (error) {
+        console.error("Error fetching videos:", error);
+      } finally {
+        setLoading(false);
       }
     };
+
     fetchVideos();
-  }, [path]);
+  }, [filterType, searchQuery]); // Re-run whenever Filter or Search changes
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div className="text-white w-full h-full">
       
-      {/* FILTER BUTTONS (Scrollable on Mobile) */}
-      <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '20px' }}>
-        {categories.map((cat) => (
-            <Link to={cat === "All" ? "/" : `/?tags=${cat}`} key={cat}>
-                <button style={{
-                    padding: '8px 15px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    backgroundColor: '#e5e5e5',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    whiteSpace: 'nowrap' // Prevents text from breaking lines
-                }}>
-                    {cat}
-                </button>
-            </Link>
-        ))}
+      {/* 1. Scrollable Tags Header */}
+      <div className="sticky top-0 bg-black z-30 pb-4 pt-2 px-2 border-b border-gray-800/50">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar w-full">
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setFilterType(category)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-colors border border-transparent ${
+                filterType === category
+                  ? "bg-white text-black"
+                  : "bg-gray-800 text-white hover:bg-gray-700 border-gray-700"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* RESPONSIVE VIDEO GRID */}
-      <div style={{ 
-        display: 'grid', 
-        // This makes it Responsive: Cards are min 250px wide, max 1 fraction of space
-        gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', 
-        gap: '20px' 
-      }}>
-        {videos.map((video) => (
-          <Link to={`/video/${video._id}`} key={video._id} style={{ textDecoration: 'none', color: 'inherit' }}>
-            <div style={{ border: '1px solid #e0e0e0', borderRadius: '10px', overflow: 'hidden', backgroundColor: 'white', display: 'flex', flexDirection: 'column', height: '100%' }}>
-              
-              {/* Aspect Ratio 16/9 for Thumbnail */}
-              <img 
-                src={video.imgUrl || video.thumbnailUrl} 
-                alt={video.title} 
-                style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover' }} 
-                onError={(e) => { e.target.src = "https://via.placeholder.com/300x180?text=No+Thumbnail"; }} 
-              />
-              
-              <div style={{ padding: '12px', flex: 1 }}>
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                    {video.title}
-                </h3>
-                <p style={{ margin: 0, color: '#606060', fontSize: '14px' }}>{video.userId || video.uploader}</p>
-                <div style={{ marginTop: '5px', fontSize: '12px', color: '#606060' }}>
-                    {video.views} views • {new Date(video.createdAt).toLocaleDateString()}
-                </div>
-              </div>
-
-            </div>
-          </Link>
-        ))}
+      {/* 2. Video Grid */}
+      <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-8">
+        
+        {loading ? (
+           // Loading State (Pulse Effect)
+           <div className="col-span-full flex justify-center mt-20">
+               <div className="animate-pulse flex flex-col items-center">
+                   <div className="h-4 w-32 bg-gray-700 rounded mb-2"></div>
+                   <p className="text-gray-500 text-sm">Loading videos...</p>
+               </div>
+           </div>
+        ) : videos.length > 0 ? (
+          // Video Cards
+          videos.map((video) => (
+            <VideoCard key={video._id} video={video} />
+          ))
+        ) : (
+          // Empty State
+          <div className="col-span-full text-center text-gray-500 mt-20">
+            <h2 className="text-xl font-bold text-gray-400 mb-2">No videos found</h2>
+            <p className="text-sm">Try searching for something else or changing the category.</p>
+          </div>
+        )}
       </div>
     </div>
   );
-};
+}
 
 export default Home;

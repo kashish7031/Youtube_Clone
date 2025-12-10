@@ -1,81 +1,109 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom"; 
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-// Accept props to control the sidebar state
-const Navbar = ({ menuOpen, setMenuOpen }) => {
-  const [q, setQ] = useState("");
+// Accept toggleSidebar prop here
+function Navbar({ toggleSidebar }) {
+  const [query, setQuery] = useState("");
   const navigate = useNavigate();
-  const user = localStorage.getItem("user");
+  const { isAuthenticated, currentUser, logout } = useAuth();
+  const [showMenu, setShowMenu] = useState(false);
 
   const handleSearch = (e) => {
-    if (e.key === 'Enter') {
-      navigate(`/?q=${q}`);
-      window.location.reload();
+    e.preventDefault();
+    if (query.trim()) {
+      navigate(`/?query=${query}`);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("user"); 
-    localStorage.removeItem("access_token");
-    navigate("/login");
-    window.location.reload();
-  };
-
   return (
-    <nav style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 20px', borderBottom: '1px solid #ccc', alignItems: 'center', backgroundColor: 'white', position: 'sticky', top: 0, zIndex: 100 }}>
+    <nav className="w-full h-16 bg-black border-b border-gray-800 flex items-center justify-between px-4 sticky top-0 z-50">
       
-      {/* LEFT: Toggle + Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-        
-        {/* HAMBURGER TOGGLE BUTTON */}
-        <div 
-            onClick={() => setMenuOpen(!menuOpen)} 
-            style={{ cursor: 'pointer', fontSize: '24px', padding: '5px', userSelect: 'none' }}
-        >
+      {/* 1. Logo & Sidebar Toggle */}
+      <div className="flex items-center gap-4">
+         {/* Toggle Button: Always visible now (removed md:hidden) */}
+         <button 
+            onClick={toggleSidebar} 
+            className="text-white text-2xl focus:outline-none hover:bg-gray-800 p-2 rounded-full"
+         >
             ☰
-        </div>
-
-        <Link to="/" style={{ textDecoration: 'none', color: 'black', fontWeight: 'bold', fontSize: '20px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <img src="https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png" alt="logo" height="30" />
-            <span>YouTube</span>
-        </Link>
+         </button>
+         
+         <Link to="/" className="text-xl font-bold flex items-center gap-1" onClick={() => setQuery("")}>
+            <span className="text-red-600 text-3xl">▶</span> 
+            <span className="text-white tracking-tighter hidden sm:inline">MyTube</span>
+         </Link>
       </div>
 
-      {/* CENTER: Search Bar */}
-      <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #ccc', borderRadius: '20px', padding: '5px 15px', width: '40%' }}>
-         <input 
-           type="text" 
-           placeholder="Search" 
-           onChange={(e) => setQ(e.target.value)}
-           onKeyDown={handleSearch}
-           style={{ border: 'none', outline: 'none', width: '100%' }}
-         />
-      </div>
+      {/* 2. Search Bar */}
+      <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-4 flex items-center group">
+         <div className="flex w-full relative">
+            <input 
+              type="text" 
+              placeholder="Search" 
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full bg-black border border-gray-700 text-white px-4 py-2 rounded-l-full focus:border-blue-500 outline-none transition-colors"
+            />
+            {query && (
+                <button 
+                    type="button" 
+                    onClick={() => setQuery("")}
+                    className="absolute right-16 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                    ✕
+                </button>
+            )}
+            <button 
+                type="submit" 
+                className="bg-gray-800 border border-l-0 border-gray-700 px-6 py-2 rounded-r-full hover:bg-gray-700 transition"
+            >
+              🔍
+            </button>
+         </div>
+      </form>
 
-      {/* RIGHT: User Actions */}
-      <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-         {user ? (
-           <>
-             <Link to="/channel">
-               <button style={{ cursor: 'pointer', padding: '8px 15px', backgroundColor: '#f0f0f0', border: '1px solid #ccc', borderRadius: '2px' }}>
-                 My Channel
-               </button>
-             </Link>
-             <button onClick={handleLogout} style={{ cursor: 'pointer', padding: '8px 15px', backgroundColor: 'transparent', border: '1px solid #ccc' }}>
-                Logout
-             </button>
-             <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#cc0000', color: 'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'bold' }}>U</div>
-           </>
+      {/* 3. Right Actions */}
+      <div className="flex items-center gap-3 sm:gap-5">
+         {isAuthenticated ? (
+            <>
+               <Link to="/upload" className="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-800 transition">
+                  <span className="text-2xl">📹</span>
+               </Link>
+
+               <div className="relative">
+                  <button onClick={() => setShowMenu(!showMenu)} className="focus:outline-none">
+                    <img 
+                        src={currentUser?.avatar || "https://via.placeholder.com/40"} 
+                        alt="User" 
+                        className="w-8 h-8 rounded-full border border-gray-700 object-cover" 
+                    />
+                  </button>
+                  
+                  {showMenu && (
+                    <div className="absolute right-0 top-12 w-48 bg-gray-900 border border-gray-700 rounded-xl shadow-xl py-2 overflow-hidden z-50">
+                        <div className="px-4 py-3 border-b border-gray-700">
+                            <p className="text-sm text-white font-semibold truncate">{currentUser?.fullName}</p>
+                            <p className="text-xs text-gray-400 truncate">@{currentUser?.username}</p>
+                        </div>
+                        <button 
+                            onClick={logout}
+                            className="block w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-800"
+                        >
+                            Sign out
+                        </button>
+                    </div>
+                  )}
+               </div>
+            </>
          ) : (
-           <Link to="/login">
-             <button style={{ padding: '8px 15px', color: '#065fd4', border: '1px solid #ccc', borderRadius: '2px', background: 'white', cursor: 'pointer' }}>
-               Sign In
-             </button>
-           </Link>
+            <Link to="/login" className="flex items-center gap-2 px-4 py-1.5 border border-gray-700 rounded-full text-blue-400 hover:bg-blue-500/10 font-medium text-sm transition">
+               <span className="text-lg">👤</span> Sign in
+            </Link>
          )}
       </div>
     </nav>
   );
-};
+}
 
 export default Navbar;

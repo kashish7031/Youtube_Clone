@@ -1,78 +1,72 @@
-﻿// frontend/src/components/VideoCard.jsx
-import React from "react";
+﻿import React from "react";
+import { Link } from "react-router-dom";
 
-export default function VideoCard({ video }) {
-  // backend may return user as id string or object; safe-guard accesses
-  const title = video?.title || "Untitled";
-  const desc = video?.description || "";
-  const url = video?.url || "";
-  const createdAt = video?.createdAt ? new Date(video.createdAt).toLocaleString() : "";
+// Helper to format duration (e.g., 125s -> 2:05)
+const formatDuration = (duration) => {
+  const minutes = Math.floor(duration / 60);
+  const seconds = Math.floor(duration % 60);
+  return `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+};
 
+// Helper for "time ago" (e.g., 2 days ago)
+const formatTimeAgo = (dateString) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) return "Just now";
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  return `${Math.floor(diffInSeconds / 2592000)} months ago`;
+};
+
+function VideoCard({ video }) {
   return (
-    <article style={styles.card}>
-      <div style={styles.thumb}>
-        {/* if url is an external video, we show a placeholder thumbnail */}
-        <div style={styles.videoBox}>
-          <a href={url} target="_blank" rel="noreferrer" style={styles.link}>
-            {url ? "Open" : "No video URL"}
-          </a>
+    <Link to={`/video/${video._id}`} className="block group">
+      <div className="flex flex-col gap-2 cursor-pointer">
+        {/* Thumbnail Container */}
+        <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-gray-800">
+          <img
+            src={video.thumbnail}
+            alt={video.title}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+          />
+          {/* Duration Badge */}
+          <span className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded font-medium">
+            {formatDuration(video.duration)}
+          </span>
         </div>
-      </div>
 
-      <div style={styles.meta}>
-        <h3 style={styles.title}>{title}</h3>
-        <p style={styles.desc}>{desc}</p>
-        <div style={styles.footer}>
-          <small>{createdAt}</small>
+        {/* Video Info */}
+        <div className="flex gap-3 mt-1">
+          {/* Channel Avatar */}
+          <img
+            src={video.ownerDetails?.avatar || video.owner?.avatar || "https://via.placeholder.com/40"}
+            alt="avatar"
+            className="w-9 h-9 rounded-full object-cover mt-1"
+          />
+          
+          <div className="flex flex-col">
+            {/* Title */}
+            <h3 className="text-white font-semibold text-sm leading-tight line-clamp-2 group-hover:text-blue-400 transition-colors">
+              {video.title}
+            </h3>
+            
+            {/* Channel Name */}
+            <p className="text-gray-400 text-xs mt-1 hover:text-white transition-colors">
+              {video.ownerDetails?.username || video.owner?.username}
+            </p>
+            
+            {/* Views & Time */}
+            <p className="text-gray-400 text-xs">
+              {video.views} views • {formatTimeAgo(video.createdAt)}
+            </p>
+          </div>
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
 
-const styles = {
-  card: {
-    display: "flex",
-    flexDirection: "column",
-    border: "1px solid #eee",
-    borderRadius: 6,
-    padding: 12,
-    background: "#fff",
-    minWidth: 240,
-    maxWidth: 360,
-    boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
-  },
-  thumb: {
-    height: 160,
-    marginBottom: 8,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#f6f6f6",
-    borderRadius: 6,
-  },
-  videoBox: {
-    padding: 8,
-  },
-  link: {
-    textDecoration: "none",
-    color: "#0d6efd",
-    fontWeight: 600,
-  },
-  meta: {
-    paddingTop: 6,
-  },
-  title: {
-    margin: 0,
-    fontSize: 18,
-  },
-  desc: {
-    margin: "6px 0",
-    color: "#555",
-    fontSize: 14,
-  },
-  footer: {
-    marginTop: 8,
-    color: "#888",
-  },
-};
+export default VideoCard;

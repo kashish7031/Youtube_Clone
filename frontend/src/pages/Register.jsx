@@ -1,68 +1,84 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Link, useNavigate } from "react-router-dom"; 
 
-const Register = () => {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+function Register() {
+  const [formData, setFormData] = useState({
+    fullName: "",
+    username: "",
+    email: "",
+    password: "",
+    avatar: null, // New field for file
+    coverImage: null
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    setFormData(prev => ({ ...prev, [name]: files[0] }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    // MUST use FormData for file uploads
+    const data = new FormData();
+    data.append("fullName", formData.fullName);
+    data.append("username", formData.username);
+    data.append("email", formData.email);
+    data.append("password", formData.password);
+    if (formData.avatar) data.append("avatar", formData.avatar);
+    if (formData.coverImage) data.append("coverImage", formData.coverImage);
+
     try {
-      await axios.post("http://localhost:5000/api/auth/signup", {
-        username, 
-        email,
-        password,
+      await axios.post("http://localhost:5000/api/v1/auth/register", data, {
+        headers: { "Content-Type": "multipart/form-data" }
       });
-      
-      alert("Registration Successful! Please Login.");
       navigate("/login");
     } catch (err) {
-      console.error(err);
-      // Now we just show the response data directly because it's a string
-      alert(err.response?.data || "Registration Failed");
+      setError(err.response?.data?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: '20px' }}>
-      <h1>Create Account</h1>
-      <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: '20px', backgroundColor: 'white', padding: '40px', border: '1px solid #ccc', borderRadius: '8px' }}>
+    <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-gray-900 p-8 rounded-xl shadow-2xl border border-gray-800">
+        <h2 className="text-3xl font-bold mb-6 text-center">Sign Up</h2>
+        {error && <div className="text-red-500 bg-red-900/20 p-3 rounded mb-4 text-center">{error}</div>}
         
-        <input 
-          type="text" 
-          placeholder="Username" 
-          onChange={(e) => setUsername(e.target.value)} 
-          required 
-          style={{ padding: '10px', width: '250px' }}
-        />
-        
-        <input 
-          type="email" 
-          placeholder="Email" 
-          onChange={(e) => setEmail(e.target.value)} 
-          required 
-          style={{ padding: '10px', width: '250px' }}
-        />
-        
-        <input 
-          type="password" 
-          placeholder="Password" 
-          onChange={(e) => setPassword(e.target.value)} 
-          required 
-          style={{ padding: '10px', width: '250px' }}
-        />
-        
-        <button type="submit" style={{ padding: '10px', backgroundColor: '#cc0000', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}>
-          Sign Up
-        </button>
-      </form>
-      
-      <p>Already have an account? <Link to="/login">Sign In</Link></p>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="text" placeholder="Full Name" className="w-full bg-black border border-gray-700 p-3 rounded text-white" 
+            onChange={(e) => setFormData({...formData, fullName: e.target.value})} required />
+            
+          <input type="text" placeholder="Username" className="w-full bg-black border border-gray-700 p-3 rounded text-white" 
+            onChange={(e) => setFormData({...formData, username: e.target.value})} required />
+            
+          <input type="email" placeholder="Email" className="w-full bg-black border border-gray-700 p-3 rounded text-white" 
+            onChange={(e) => setFormData({...formData, email: e.target.value})} required />
+            
+          <input type="password" placeholder="Password" className="w-full bg-black border border-gray-700 p-3 rounded text-white" 
+            onChange={(e) => setFormData({...formData, password: e.target.value})} required />
+            
+          {/* Avatar Upload */}
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Avatar (Required)</label>
+            <input type="file" name="avatar" onChange={handleFileChange} accept="image/*" className="w-full bg-black text-sm text-gray-400 border border-gray-700 rounded" required />
+          </div>
+
+          <button type="submit" disabled={loading} className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded transition">
+            {loading ? "Creating Account..." : "Sign Up"}
+          </button>
+        </form>
+        <p className="mt-4 text-center text-gray-400">Already have an account? <Link to="/login" className="text-blue-400">Sign in</Link></p>
+      </div>
     </div>
   );
-};
+}
 
 export default Register;
