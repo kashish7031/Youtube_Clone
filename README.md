@@ -1,5 +1,5 @@
 # 🎥 YouTube Clone - MERN Stack Capstone Project
-
+###GitHub Link: https://github.com/kashish7031/Youtube_Clone
 A fully functional video streaming application built using the MERN stack (MongoDB, Express, React, Node.js). This project replicates core YouTube features, including video uploads, playback, comment management, and channel dashboards.
 
 ---
